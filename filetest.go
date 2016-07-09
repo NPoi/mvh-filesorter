@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -10,7 +10,13 @@ import (
 )
 
 func main() {
-	root := "/Volumes/UNTITLED/"
+
+	var root string
+	if len(os.Args) > 1 && os.Args[1] != "" {
+		root = os.Args[1]
+	} else {
+		root = "/Volumes/UNTITLED/"
+	}
 
 	var file_list []string
 	var dir_list []string
@@ -83,11 +89,19 @@ func main() {
 		// rel = path.Join(string(root), string(rel))
 		// err = os.Link(path.Join(root, "temp_", file_list[i]), path.Join(root, file_list[i]))
 		fmt.Println(path.Join(root, file_list[i]))
-		content, err := ioutil.ReadFile(path.Join(root, "temp_", file_list[i]))
+		content, err := os.Open(path.Join(root, "temp_", file_list[i]))
 		if err != nil {
 			panic(err)
 		}
-		err = ioutil.WriteFile(path.Join(root, file_list[i]), content, 0644)
+		defer content.Close()
+
+		dst, err := os.Create(path.Join(root, file_list[i]))
+		if err != nil {
+			panic(err)
+		}
+		defer dst.Close()
+
+		err = io.WriteFile(path.Join(root, file_list[i]), content, 0644)
 		if err != nil {
 			panic(err)
 		}
